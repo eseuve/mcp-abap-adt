@@ -394,6 +394,22 @@ import {
   handleActivateTable,
 } from '../../../handlers/table/low/handleActivateTable';
 import {
+  TOOL_DEFINITION as CreateTableEntity_Tool,
+  handleCreateTableEntity,
+} from '../../../handlers/table_entity/high/handleCreateTableEntity';
+import {
+  TOOL_DEFINITION as DeleteTableEntity_Tool,
+  handleDeleteTableEntity,
+} from '../../../handlers/table_entity/high/handleDeleteTableEntity';
+import {
+  TOOL_DEFINITION as GetTableEntity_Tool,
+  handleGetTableEntity,
+} from '../../../handlers/table_entity/high/handleGetTableEntity';
+import {
+  handleUpdateTableEntity,
+  TOOL_DEFINITION as UpdateTableEntity_Tool,
+} from '../../../handlers/table_entity/high/handleUpdateTableEntity';
+import {
   TOOL_DEFINITION as CreateTransport_Tool,
   handleCreateTransport,
 } from '../../../handlers/transport/high/handleCreateTransport';
@@ -717,6 +733,22 @@ export class HighLevelHandlersGroup extends BaseHandlerGroup {
       {
         toolDefinition: DeleteView_Tool,
         handler: withContext(handleDeleteView),
+      },
+      {
+        toolDefinition: CreateTableEntity_Tool,
+        handler: withContext(handleCreateTableEntity),
+      },
+      {
+        toolDefinition: UpdateTableEntity_Tool,
+        handler: withContext(handleUpdateTableEntity),
+      },
+      {
+        toolDefinition: GetTableEntity_Tool,
+        handler: withContext(handleGetTableEntity),
+      },
+      {
+        toolDefinition: DeleteTableEntity_Tool,
+        handler: withContext(handleDeleteTableEntity),
       },
       {
         toolDefinition: CreateServiceDefinition_Tool,
