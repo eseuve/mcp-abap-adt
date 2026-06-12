@@ -31,19 +31,29 @@ describeOrSkip('TableEntity tools (live CRUD)', () => {
     ({ connection } = await createTestConnectionAndSession());
   }, getTimeout('long'));
 
-  afterAll(async () => {
-    if (!PKG || !connection) return;
-    await handleDeleteTableEntity(
-      createHandlerContext({ connection, logger }),
-      {
+  // Deleting right after activation can transiently fail while the freshly
+  // generated persisted table settles; retry a few times.
+  async function deleteEntity(ctx: ReturnType<typeof createHandlerContext>) {
+    let last: Awaited<ReturnType<typeof handleDeleteTableEntity>> | undefined;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      last = await handleDeleteTableEntity(ctx, {
         name: NAME,
         transport_request: TRANSPORT,
-      },
-    );
+      });
+      if (!last.isError) return last;
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+    return last;
+  }
+
+  // Safety net: best-effort cleanup if the test threw before its own delete.
+  afterAll(async () => {
+    if (!PKG || !connection) return;
+    await deleteEntity(createHandlerContext({ connection, logger }));
   }, getTimeout('long'));
 
   it(
-    'creates (with source + activate), reads, then the entity is real',
+    'creates (with source + activate), reads it back, then deletes it',
     async () => {
       const ctx = createHandlerContext({ connection, logger });
       const source = `@AbapCatalog.deliveryClass: #APPLICATION_DATA
@@ -55,6 +65,7 @@ define table entity ${NAME}
 }
 `;
 
+      // Create (single call: create -> set source -> activate)
       const created = await handleCreateTableEntity(ctx, {
         name: NAME,
         package_name: PKG,
@@ -68,12 +79,21 @@ define table entity ${NAME}
       expect(createdData.kind).toBe('table_entity');
       expect(createdData.activated).toBe(true);
 
+      // Read back: the persisted source is a real table entity
       const got = await handleGetTableEntity(ctx, { name: NAME });
       expect(got.isError).toBe(false);
       const gotData = parseHandlerResponse(got);
       expect(String(gotData.source).toLowerCase()).toContain(
         'define table entity',
       );
+
+      // Delete (asserted — leaves no orphan)
+      const deleted = await deleteEntity(ctx);
+      expect(deleted?.isError).toBe(false);
+
+      // Confirm it is gone
+      const goneRead = await handleGetTableEntity(ctx, { name: NAME });
+      expect(goneRead.isError).toBe(true);
     },
     getTimeout('long'),
   );
