@@ -112,12 +112,19 @@ handlers, the registration wiring, the source-guard helper + its unit test, the
 integration test, and a short doc under `docs/development/`. Push to the fork;
 the user decides on the PR. No `adt-clients` change.
 
-## Open questions
+## Decisions (resolved)
 
-- **O1 — scaffold vs empty on `CreateTableEntity` without `source`:** ship a
-  minimal `key Uuid : sysuuid_x16` scaffold (valid starting point, but imposes a
-  field), or create a truly empty inactive object and only *suggest* a scaffold
-  in the response text? Current choice: minimal scaffold, inactive.
-- **O2 — key-field data element in the scaffold:** `sysuuid_x16` is a safe,
-  ubiquitous standard type. Acceptable default? (Alternative: `abap.char(10)`
-  key.)
+- **O1 — `CreateTableEntity` without `source`:** create the `DDLS/DF` carrying a
+  minimal scaffold source, left **inactive**, as a valid starting point the
+  caller completes and activates via `UpdateTableEntity`.
+- **O2 — scaffold key field:** `key Uuid : sysuuid_x16` (ubiquitous standard
+  type, matching the real `/…/T_*` table entities in use).
+
+The exact scaffold:
+
+```
+define table entity NAME
+{
+  key Uuid : sysuuid_x16;
+}
+```
