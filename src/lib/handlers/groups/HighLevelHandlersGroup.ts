@@ -40,6 +40,22 @@ import {
   TOOL_DEFINITION as UpdateBehaviorImplementation_Tool,
 } from '../../../handlers/behavior_implementation/high/handleUpdateBehaviorImplementation';
 import {
+  TOOL_DEFINITION as CreateCdsType_Tool,
+  handleCreateCdsType,
+} from '../../../handlers/cds_type/high/handleCreateCdsType';
+import {
+  TOOL_DEFINITION as DeleteCdsType_Tool,
+  handleDeleteCdsType,
+} from '../../../handlers/cds_type/high/handleDeleteCdsType';
+import {
+  TOOL_DEFINITION as GetCdsType_Tool,
+  handleGetCdsType,
+} from '../../../handlers/cds_type/high/handleGetCdsType';
+import {
+  handleUpdateCdsType,
+  TOOL_DEFINITION as UpdateCdsType_Tool,
+} from '../../../handlers/cds_type/high/handleUpdateCdsType';
+import {
   TOOL_DEFINITION as CheckClass_Tool,
   handleCheckClass,
 } from '../../../handlers/class/high/handleCheckClass';
@@ -1110,6 +1126,22 @@ export class HighLevelHandlersGroup extends BaseHandlerGroup {
       {
         toolDefinition: DeleteMetadataExtension_Tool,
         handler: withContext(handleDeleteMetadataExtension),
+      },
+      {
+        toolDefinition: CreateCdsType_Tool,
+        handler: withContext(handleCreateCdsType),
+      },
+      {
+        toolDefinition: UpdateCdsType_Tool,
+        handler: withContext(handleUpdateCdsType),
+      },
+      {
+        toolDefinition: GetCdsType_Tool,
+        handler: withContext(handleGetCdsType),
+      },
+      {
+        toolDefinition: DeleteCdsType_Tool,
+        handler: withContext(handleDeleteCdsType),
       },
       // Per-type Check handlers (high-level)
       {
