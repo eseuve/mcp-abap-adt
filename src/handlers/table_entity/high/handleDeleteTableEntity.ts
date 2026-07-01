@@ -1,6 +1,6 @@
 /**
  * DeleteTableEntity - delete a CDS table entity (DDLS/DF). Delegates to
- * DeleteView and re-labels the payload.
+ * DeleteDdl and re-labels the payload.
  */
 import type { HandlerContext } from '../../../lib/handlers/interfaces';
 import {
@@ -8,7 +8,7 @@ import {
   return_error,
   return_response,
 } from '../../../lib/utils';
-import { handleDeleteView } from '../../view/high/handleDeleteView';
+import { handleDeleteDdl } from '../../ddl/high/handleDeleteDdl';
 
 export const TOOL_DEFINITION = {
   name: 'DeleteTableEntity',
@@ -43,8 +43,8 @@ export async function handleDeleteTableEntity(
     return return_error(new Error('Missing required parameter: name'));
   }
 
-  const res = await handleDeleteView(context, {
-    view_name: args.name,
+  const res = await handleDeleteDdl(context, {
+    ddl_name: args.name,
     transport_request: args.transport_request,
   });
   if (res?.isError) return res;

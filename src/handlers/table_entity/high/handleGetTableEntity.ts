@@ -1,5 +1,5 @@
 /**
- * GetTableEntity - read a table entity's DDL source. Delegates to GetView and
+ * GetTableEntity - read a table entity's DDL source. Delegates to GetDdl and
  * re-labels the payload with table-entity terminology.
  */
 import type { HandlerContext } from '../../../lib/handlers/interfaces';
@@ -8,7 +8,7 @@ import {
   return_error,
   return_response,
 } from '../../../lib/utils';
-import { handleGetView } from '../../view/high/handleGetView';
+import { handleGetDdl } from '../../ddl/high/handleGetDdl';
 
 export const TOOL_DEFINITION = {
   name: 'GetTableEntity',
@@ -43,8 +43,8 @@ export async function handleGetTableEntity(
     return return_error(new Error('Missing required parameter: name'));
   }
 
-  const res = await handleGetView(context, {
-    view_name: args.name,
+  const res = await handleGetDdl(context, {
+    ddl_name: args.name,
     version: args.version,
   });
   if (res?.isError) return res;
@@ -56,10 +56,10 @@ export async function handleGetTableEntity(
       data: JSON.stringify(
         {
           success: true,
-          name: v.view_name,
+          name: v.ddl_name,
           version: v.version,
           kind: 'table_entity',
-          source: v.view_data,
+          source: v.ddl_data,
           status: v.status,
           status_text: v.status_text,
         },
@@ -68,7 +68,7 @@ export async function handleGetTableEntity(
       ),
     } as AxiosResponse);
   } catch {
-    // Fall back to the raw GetView response if the payload is not JSON.
+    // Fall back to the raw GetDdl response if the payload is not JSON.
     return res;
   }
 }

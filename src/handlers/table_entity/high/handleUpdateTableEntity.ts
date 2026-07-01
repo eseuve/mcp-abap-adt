@@ -8,7 +8,7 @@ import {
   return_error,
   return_response,
 } from '../../../lib/utils';
-import { handleUpdateView } from '../../view/high/handleUpdateView';
+import { handleUpdateDdl } from '../../ddl/high/handleUpdateDdl';
 import { isTableEntitySource } from '../tableEntitySource';
 
 export const TOOL_DEFINITION = {
@@ -57,14 +57,14 @@ export async function handleUpdateTableEntity(
   if (!isTableEntitySource(args.source)) {
     return return_error(
       new Error(
-        'source is not a table entity; it must contain "define table entity". Use UpdateView for CDS views.',
+        'source is not a table entity; it must contain "define table entity". Use UpdateDdl for CDS views.',
       ),
     );
   }
 
   const activate = args.activate !== false;
-  const updated = await handleUpdateView(context, {
-    view_name: args.name,
+  const updated = await handleUpdateDdl(context, {
+    ddl_name: args.name,
     ddl_source: args.source,
     transport_request: args.transport_request,
     activate,

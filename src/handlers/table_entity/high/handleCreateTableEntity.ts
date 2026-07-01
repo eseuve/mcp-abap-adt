@@ -9,8 +9,8 @@ import {
   return_error,
   return_response,
 } from '../../../lib/utils';
-import { handleCreateView } from '../../view/high/handleCreateView';
-import { handleUpdateView } from '../../view/high/handleUpdateView';
+import { handleCreateDdl } from '../../ddl/high/handleCreateDdl';
+import { handleUpdateDdl } from '../../ddl/high/handleUpdateDdl';
 import {
   buildTableEntityScaffold,
   isTableEntitySource,
@@ -81,7 +81,7 @@ export async function handleCreateTableEntity(
   if (hasSource && !isTableEntitySource(args.source as string)) {
     return return_error(
       new Error(
-        'source is not a table entity; it must contain "define table entity". Use CreateView for CDS views.',
+        'source is not a table entity; it must contain "define table entity". Use CreateDdl for CDS views.',
       ),
     );
   }
@@ -92,16 +92,16 @@ export async function handleCreateTableEntity(
   // Provided source activates per `activate` (default true); a scaffold stays inactive.
   const activate = hasSource ? args.activate !== false : false;
 
-  const created = await handleCreateView(context, {
-    view_name: args.name,
+  const created = await handleCreateDdl(context, {
+    ddl_name: args.name,
     package_name: args.package_name,
     transport_request: args.transport_request,
     description: args.description || args.name,
   });
   if (created?.isError) return created;
 
-  const updated = await handleUpdateView(context, {
-    view_name: args.name,
+  const updated = await handleUpdateDdl(context, {
+    ddl_name: args.name,
     ddl_source: effectiveSource,
     transport_request: args.transport_request,
     activate,
