@@ -235,20 +235,42 @@ export async function handleCreatePackage(
         );
       }
 
-      // Check if package already exists
+      // Distinguish 409 causes — a transport/object lock conflict is NOT the
+      // same as "already exists". Misclassifying the former hides the real
+      // cause (e.g. the target transport request is locked/being edited).
       const errorMessageLower = error.message?.toLowerCase() || '';
       const errorDataLower =
         typeof error.response?.data === 'string'
           ? error.response.data.toLowerCase()
           : '';
-      if (
+
+      const isLockConflict =
+        errorDataLower.includes('lockconflict') ||
+        errorDataLower.includes('currently being edited') ||
+        errorDataLower.includes('locked') ||
+        errorMessageLower.includes('currently being edited');
+      const isAlreadyExists =
         errorMessageLower.includes('already exists') ||
         errorMessageLower.includes('does already exist') ||
         errorDataLower.includes('already exists') ||
         errorDataLower.includes('does already exist') ||
-        errorDataLower.includes('exceptionresourcealreadyexists') ||
-        error.response?.status === 409
-      ) {
+        errorDataLower.includes('exceptionresourcealreadyexists');
+
+      if (isLockConflict) {
+        // Surface the real SAP message (e.g. "Request <TR> is currently being
+        // edited by user X") instead of a misleading "already exists".
+        const sapMsg =
+          (typeof error.response?.data === 'string'
+            ? error.response.data.match(
+                /<message[^>]*>([^<]+)<\/message>/i,
+              )?.[1]
+            : undefined) || error.message;
+        throw new McpError(
+          ErrorCode.InvalidRequest,
+          `Cannot create package ${packageName}: ${sapMsg}. The target transport request may be locked or open in another session — release it (SE09/SM12) and retry.`,
+        );
+      }
+      if (isAlreadyExists || error.response?.status === 409) {
         throw new McpError(
           ErrorCode.InvalidParams,
           `Package ${packageName} already exists. Please delete it first or use a different name.`,
