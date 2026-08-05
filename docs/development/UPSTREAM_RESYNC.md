@@ -135,12 +135,56 @@ cd mcp-abap-adt && npm install && npm run build && npx jest
 - Expected green: clients build + 8 namespace unit tests; core build + full
   unit suite (~530 tests).
 
-## Leave it running locally
+## One-time: wire our branch as the local MCP
 
-The global `mcp-abap-adt` binary is symlinked to this working copy; it runs
-`dist/server/launcher.js` and loads clients via
-`node_modules/@mcp-abap-adt/adt-clients` → symlink → `../mcp-abap-adt-clients`.
-So **both `dist/` must be rebuilt** and the MCP reconnected:
+Do this **once** per machine. After it's set up, a re-sync only needs the
+rebuild in the next section — the wiring persists across rebases because it
+points at the working directory, not at any branch.
+
+The chain we build:
+
+```
+mcp-abap-adt (global bin on PATH)
+  └─ symlink → <npm root -g>/@mcp-abap-adt/core/bin/mcp-abap-adt.js
+       └─ @mcp-abap-adt/core  symlink → ~/Developer/BTP/mcp-abap-adt   (this working copy)
+            └─ node_modules/@mcp-abap-adt/adt-clients symlink → ../mcp-abap-adt-clients
+```
+
+Steps:
+
+```bash
+# 1. clients: make the fork resolvable by name (creates the global link target)
+cd mcp-abap-adt-clients && npm run build && npm link          # links @mcp-abap-adt/adt-clients
+
+# 2. core: consume the linked clients + expose the `mcp-abap-adt` bin globally
+cd ../mcp-abap-adt
+#    package.json already pins "@mcp-abap-adt/adt-clients": "file:../mcp-abap-adt-clients"
+#    (the file: link gives node_modules/@mcp-abap-adt/adt-clients → ../mcp-abap-adt-clients)
+npm install && npm run build
+npm link                                                       # global @mcp-abap-adt/core → this dir + `mcp-abap-adt` bin
+
+# 3. register the server in the client (Claude Code) — once
+claude mcp add abap-adt mcp-abap-adt
+#    equivalently, in ~/.claude.json:  "abap-adt": { "command": "mcp-abap-adt" }
+```
+
+Verify the chain:
+
+```bash
+ls -l "$(which mcp-abap-adt)"                                  # → .../@mcp-abap-adt/core/bin/mcp-abap-adt.js
+ls -l "$(npm root -g)/@mcp-abap-adt/core"                      # → ~/Developer/BTP/mcp-abap-adt
+ls -l mcp-abap-adt/node_modules/@mcp-abap-adt/adt-clients      # → ../mcp-abap-adt-clients
+```
+
+Whichever branch is **checked out** in the two working copies is the code the
+MCP runs — so `git checkout local/all-features` (core) + `feat/cds-type-client`
+(clients) selects our fixed version. No re-registration needed after a rebase.
+
+## Leave it running locally (after each re-sync)
+
+The bin runs `dist/server/launcher.js` and loads clients through the symlink
+above. So after promoting the branches, **both `dist/` must be rebuilt** and the
+MCP reconnected:
 
 ```bash
 cd mcp-abap-adt-clients && npm run build

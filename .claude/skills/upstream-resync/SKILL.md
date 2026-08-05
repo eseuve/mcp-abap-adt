@@ -104,6 +104,12 @@ live-SAP admin tests. Expect ~530 unit tests green.
 
 ## Phase 4 — Promote & leave running locally
 
+First-time machine setup (wiring the fork as the `mcp-abap-adt` local MCP via
+`npm link` + `claude mcp add`) is a one-time step — see **"One-time: wire our
+branch as the local MCP"** in `docs/development/UPSTREAM_RESYNC.md`. Once wired,
+it points at the working dir, so the checked-out branch *is* what the MCP runs;
+a re-sync only needs the promote + rebuild below.
+
 ```bash
 cd mcp-abap-adt-clients && git branch -f feat/cds-type-client resync/clients-<ver> && git checkout feat/cds-type-client && npm run build
 cd ../mcp-abap-adt       && git branch -f local/all-features   resync/core-<ver>    && git checkout local/all-features   && npm run build
